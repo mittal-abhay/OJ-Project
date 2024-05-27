@@ -1,4 +1,12 @@
 import mongoose from "mongoose";
+const Schema = mongoose.Schema;
+
+const AttemptedProblemSchema = new mongoose.Schema({
+    problem_id: { type: Schema.Types.ObjectId, ref: 'Problem' },
+    solved: Boolean,
+    submission_id: { type: Schema.Types.ObjectId, ref: 'Submission' },
+    verdict: String
+});
 
 const UserSchema = new mongoose.Schema({
     firstname: {
@@ -15,7 +23,12 @@ const UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-    }
+    },
+    role: {
+        type: String,
+        default: "user"
+    },
+    attemptedProblems: [AttemptedProblemSchema]
 });
 
 

@@ -1,0 +1,43 @@
+.homepage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .left {
+    flex: 1;
+  }
+  
+  .right {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .illustration img {
+    max-width: 100%;
+  }
+  
+  .info {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .link {
+    color: blue;
+    cursor: pointer;
+  }
+  
+  .link:hover {
+    text-decoration: underline;
+  }
+  

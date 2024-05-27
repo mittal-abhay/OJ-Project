@@ -8,33 +8,39 @@ dotenv.config();
 //registering the user
 export const register = async (req, res) => { 
     try {
-        const {firstname, lastname, email, password} = req.body;
+        const { firstname, lastname, email, password, role } = req.body;
 
         if (!(firstname && lastname && email && password)) {
             return res.status(400).json("Please enter all the information");
         }
         //check if the user already exists
-        const user = await User.findOne({email});
+        const user = await User.findOne({ email });
         if(user){
-            return res.status(400).json({message: "User already exists!"});
+            return res.status(400).json({ message: "User already exists!" });
         }
         //hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //create a new user
-        const newUser = await User.create({firstname, lastname, email, password: hashedPassword});
+        const newUser = await User.create({ 
+            firstname, 
+            lastname, 
+            email, 
+            password: hashedPassword,
+            role: role || 'user'  // default role is 'user'
+        });
 
         // generate a token for user and send it
-        const token = jwt.sign({ id: newUser._id, email }, process.env.SECRET_KEY, {
+        const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.SECRET_KEY, {
             expiresIn: "1d",
         });
         newUser.token = token;
         newUser.password = undefined;
         res
             .status(200)
-            .json({ message: "You have successfully registered!", user });
+            .json({ message: "You have successfully registered!", newUser });
     }catch(err){
-        return res.status(500).json({message: "Server Error!"});
+        return res.status(500).json({ message: "Server Error!" });
     }
 }
 
@@ -61,7 +67,7 @@ export const login = async (req, res) => {
             return res.status(401).send("Password is incorrect");
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET_KEY, {
             expiresIn: "1d",
         });
         user.token = token;
@@ -74,12 +80,13 @@ export const login = async (req, res) => {
         };
 
         //send the token
-        res.status(200).cookie("token", token, options).json({
+        res.status(200).cookie("access_token", token, options).json({
             message: "You have successfully logged in!",
             success: true,
             token,
         });
     } catch (error) {
         console.log(error.message);
+        res.status(500).json({ message: "Server Error!" });
     }
 }
