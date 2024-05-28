@@ -28,7 +28,7 @@ const Problem = () => {
   }, [id, token]);
 
   if (!problem) {
-    return <div>Loading...</div>;
+    return <div>Problem doesn't exist</div>;
   }
 
   return (

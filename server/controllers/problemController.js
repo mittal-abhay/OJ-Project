@@ -5,7 +5,7 @@ import Testcase from '../models/Testcase.js';
 export const createProblem = async (req, res) => {
     try {
         const { title, statement, tags, difficulty_level, score, testcases } = req.body;
-
+        console.log(req.body)
         if (!title || !statement || !tags || !difficulty_level || !score || !testcases) {
             return res.status(400).json({ message: "Please fill all fields" });
         }
