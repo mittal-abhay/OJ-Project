@@ -9,11 +9,16 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const token = Cookies.get('access_token');
+    
 
     useEffect(() => {
         const isLogin = localStorage.getItem('isAuth'); 
+        const user_role = localStorage.getItem('role');
         if (isLogin) {
             setIsAuth(true);
+        }
+        if (user_role) {
+            setRole(user_role);
         }
         setIsLoading(false);  // Set loading to false after checking auth status
     }, []);
@@ -28,6 +33,7 @@ export const AuthProvider = ({ children }) => {
         const user_role = decodedToken.role;
         setRole(user_role);
         localStorage.setItem('role', user_role);
+        console.log('Role:', user_role);
     };
 
     const login = async (email, password) => {
