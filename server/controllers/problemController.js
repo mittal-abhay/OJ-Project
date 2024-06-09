@@ -4,9 +4,10 @@ import Testcase from '../models/Testcase.js';
 // Create a new problem
 export const createProblem = async (req, res) => {
     try {
-        const { title, statement, tags, difficulty_level, score, testcases } = req.body;
+        const { title, statement, tags, difficulty_level, score, testcases, sample_testcases, constraints, input_format, output_format, execution_time_limit
+         } = req.body;
         console.log(req.body)
-        if (!title || !statement || !tags || !difficulty_level || !score || !testcases) {
+        if (!title || !statement || !tags || !difficulty_level || !score || !testcases || !constraints || !input_format || !output_format) {
             return res.status(400).json({ message: "Please fill all fields" });
         }
 
@@ -16,7 +17,11 @@ export const createProblem = async (req, res) => {
             tags,
             difficulty_level,
             score,
-            testcases: [] // Initialize with an empty array to populate later
+            testcases: [], // Initialize with an empty array to populate later
+            sample_testcases:[],
+            constraints,
+            input_format,
+            output_format,
         });
 
         const savedProblem = await problem.save();
@@ -29,6 +34,16 @@ export const createProblem = async (req, res) => {
             });
             const savedTestcase = await newTestcase.save();
             savedProblem.testcases.push(savedTestcase._id);
+        }
+
+        for (const sample_testcase of sample_testcases) {
+            const newSampleTestcase = new Testcase({
+                input: sample_testcase.input,
+                expected_output: sample_testcase.expected_output,
+                problem_id: savedProblem._id
+            });
+            const savedSampleTestcase = await newSampleTestcase.save();
+            savedProblem.sample_testcases.push(savedSampleTestcase._id);
         }
 
         await savedProblem.save();
@@ -63,18 +78,31 @@ export const updateProblem = async (req, res) => {
         if(!problem){
             return res.status(404).json({message: "Problem not found"});
         }
-        const { title, statement, tags, difficulty_level, score, testcases } = req.body;
+        const { title, statement, tags, difficulty_level, score, testcases, sample_testcases, input_format, output_format, constraints} = req.body;
         if(title) problem.title = title;
         if(statement) problem.statement = statement;
         if(tags) problem.tags = tags;
         if(difficulty_level) problem.difficulty_level = difficulty_level;
         if(score) problem.score = score;
+        if(input_format) problem.input_format = input_format;
+        if(output_format) problem.output_format = output_format;
+        if(constraints) problem.constraints = constraints;
+
+        if(sample_testcases) {
+            //delete previous sample testcases
+            for (const sample_testcase of sample_testcases) {
+                const newSampleTestcase = new Testcase({
+                    input: sample_testcase.input,
+                    expected_output: sample_testcase.expected_output,
+                    problem_id: problem._id
+                });
+                const savedSampleTestcase = await newSampleTestcase.save();
+                console.log("Hi2")
+                problem.sample_testcases.push(savedSampleTestcase._id);
+            }
+        }
+        
         if(testcases) {
-            problem.testcases = [];
-            //delete previous testcases
-            await Testcase.deleteMany({problem_id: problem._id});
-
-
             for (const testcase of testcases) {
                 const newTestcase = new Testcase({
                     input: testcase.input,
@@ -83,7 +111,6 @@ export const updateProblem = async (req, res) => {
                 });
                 const savedTestcase = await newTestcase.save();
                 problem.testcases.push(savedTestcase._id);
-
             }
         }
         await problem.save();
@@ -108,10 +135,40 @@ export const deleteProblem = async (req, res) => {
     }
 }
 
+//get sample test cases of a problem
+export const getSampleTestCases = async (req, res) => {
+    try{
+        const problem = await Problem.findById(req.params.id);
+        if(!problem){
+            return res.status(404).json({message: "Problem not found"});
+        }
+        const sample_testcases = problem.sample_testcases;
+        const sample_testcases_data = await Testcase.find({_id: {$in: sample_testcases}});
+        return res.status(200).json(sample_testcases_data);
+    }catch(err){
+        return res.status(500).json({message: err.message});
+    }
+}
+//getTestCases of a problem
+export const getTestCases = async (req, res) => {
+    try{
+        const problem = await Problem.findById(req.params.id);
+        if(!problem){
+            return res.status(404).json({message: "Problem not found"});
+        }
+        const testcases = await Testcase.find({problem_id: problem._id});
+        return res.status(200).json(testcases);
+    }catch(err){
+        return res.status(500).json({message: err.message});
+    }
+}
+
 //add test cases to a problem
 export const addTestcase = async (req, res) => {
     try{
+        console.log(req.params.id)
         const problem = await Problem.findById(req.params.id);
+    
         if(!problem){
             return res.status(404).json({message: "Problem not found"});
         }

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import Login from "../pages/login"; 
 import Register from "../pages/register"; 
 import styles from "../styles/landingPage.module.css";
-import loginImg from "../../assets/login.png";
+import loginImg from "../../assets/login.jpg";
+
 const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+
   return (
     <div className={styles.homepage}>
       <div className={styles.container}>
@@ -26,7 +28,7 @@ const LandingPage = () => {
             </>
           ) : (
             <>
-              <Register />
+              <Register setIsLogin={setIsLogin}/>
               <div className={styles.info}>
                 Already have an account?{" "}
                 <span className={styles.link} onClick={() => setIsLogin(true)}>

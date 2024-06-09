@@ -1,5 +1,5 @@
 import express from 'express';
-import { getProblemList, createProblem, getProblemById, updateProblem, addTestcase, deleteProblem, deleteTestcase} from '../controllers/problemController.js';
+import { getProblemList, createProblem, getProblemById, updateProblem, getTestCases, addTestcase, deleteProblem, deleteTestcase, getSampleTestCases} from '../controllers/problemController.js';
 import adminMiddleware from '../middlewares/adminMiddleware.js';
 const router = express.Router();
 
@@ -9,12 +9,16 @@ router.get('/', getProblemList);
 //getProblemById
 router.get('/:id', getProblemById);
 //updateProblem
-
 //createProblem
 router.post('/create', adminMiddleware, createProblem);
 router.put('/:id', adminMiddleware, updateProblem);
 //deleteProblem
 router.delete('/:id', adminMiddleware, deleteProblem);
+
+//get sample test cases of a problem
+router.get('/:id/sampletestcase', getSampleTestCases);
+//get test cases of a problem
+router.get('/:id/testcase', getTestCases);
 //add test case to a problem
 router.post('/:id/testcase', adminMiddleware, addTestcase);
 //delete test case from a problem

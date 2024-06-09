@@ -11,7 +11,7 @@ const SubmissionSchema = new mongoose.Schema({
         ref: 'Problem',
         required: true
     },
-    code: {
+    code_ref: {
         type: String,
         required: true
     },
@@ -23,9 +23,11 @@ const SubmissionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    memory: {
+    execution_time: {
         type: Number,
-        required: true
+    },
+    comment: {
+        type: String,
     }
 });
 

@@ -22,10 +22,26 @@ const ProblemSchema = new mongoose.Schema({
         type: Number, 
         required: true 
     },
+    sample_testcases: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Testcase' }],
+    constraints: {
+        type: String,
+        required: true
+    },
+    input_format: {
+        type: String,
+        required: true
+    },
+    output_format: {
+        type: String,
+        required: true
+    },
     submissions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Submission' }],
-    testcases: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Testcase' }]
+    testcases: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Testcase' }],
+    execution_time_limit: { 
+        type: Number, 
+        default: 2 
+    },  
 });
-
 
 const Problem = mongoose.model('Problem', ProblemSchema);
 

@@ -12,6 +12,10 @@ const TestcaseSchema = new mongoose.Schema({
     problem_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Problem'
+    },
+    visibility: {
+        type: Boolean,
+        default: true
     }
 });
 

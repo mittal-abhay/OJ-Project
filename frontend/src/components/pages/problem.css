@@ -1,0 +1,29 @@
+.test-case-indicators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .test-case-rectangle {
+    width: 100px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+  
+  .test-case-rectangle.passed {
+    background-color: green;
+  }
+  
+  .test-case-rectangle.failed {
+    background-color: red;
+  }
+  
+  .test-case-rectangle {
+    background-color: grey;
+  }
+  

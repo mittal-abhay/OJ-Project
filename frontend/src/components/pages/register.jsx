@@ -3,7 +3,7 @@ import { Container, Typography, Paper, TextField, Button, Select, MenuItem, Form
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 
-const RegisterPage = () => {
+const RegisterPage = ({setIsLogin}) => {
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
@@ -20,17 +20,25 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { firstname, lastname, email, password} = formData;
-    
-    // Password length validation
-    // if (password.length < 8) {
-    //   setError('Password must be at least 8 characters long');
-    //   return;
-    // }
+    const { firstname, lastname, email, password } = formData;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      setError('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character.');
+      return;
+    }
 
     try {
       await register({ firstname, lastname, email, password });
-      navigate('/home');
+      setIsLogin(true);
+    
     } catch (error) {
       console.error('Error:', error);
       setError(error.message);

@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const token = Cookies.get('access_token');
+    const user = localStorage.getItem('user');
     
 
     useEffect(() => {
@@ -52,7 +53,10 @@ export const AuthProvider = ({ children }) => {
 
             const data = await response.json();
             setIsAuth(true);
+    
             localStorage.setItem('isAuth', true);
+            localStorage.setItem('user', data.user._id);
+            
             Cookies.set('access_token', data.token, { expires: 1 });
             setAdminStatus(data.token);
         } catch (error) {
@@ -76,21 +80,46 @@ export const AuthProvider = ({ children }) => {
                 throw new Error(errorData.message);
             }
 
-            const data = await response.json();
-            setIsAuth(true);
-            localStorage.setItem('isAuth', true);
-            Cookies.set('access_token', data.token, { expires: 1 });
-            setAdminStatus(data.token);
         } catch (error) {
             throw new Error('An unexpected error occurred');
         }
     };
 
+    const logout = async() => {
+        try{
+            const response = await fetch('http://localhost:5000/api/auth/logout', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Logout failed');
+            }
+            
+            setIsAuth(false);
+            setRole('');
+
+            localStorage.removeItem('isAuth');
+            localStorage.removeItem('role');
+            localStorage.removeItem('user');
+
+            Cookies.remove('access_token');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+        
+
+    };
+
+
     return (
-        <AuthContext.Provider value={{ token, isAuth, isLoading, role, login, register }}>
+        <AuthContext.Provider value={{ token, isAuth, isLoading, role, login, register, logout,user }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const   useAuth = () => useContext(AuthContext);
