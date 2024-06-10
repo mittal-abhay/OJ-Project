@@ -1,10 +1,10 @@
+import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Navbar, Nav, Container } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 
 const NavigationBar = () => {
-    const { logout } = useAuth();
+    const { userInfo, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -24,7 +24,13 @@ const NavigationBar = () => {
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto"> {/* Align links to the right */}
                         <Nav.Link as={Link} to="/problems">Problems</Nav.Link>
-                        <Nav.Link onClick={handleLogout}>Logout</Nav.Link> {/* Directly use Nav.Link for Logout */}
+                        {userInfo && (
+                            <NavDropdown title={`${userInfo.firstname} ${userInfo.lastname}`} id="user-profile-dropdown">
+                                <NavDropdown.Item as={Link} to="/userProfile">Profile</NavDropdown.Item>
+                                <NavDropdown.Divider />
+                                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+                            </NavDropdown>
+                        )}
                     </Nav>
                 </Navbar.Collapse>
             </Container>

@@ -18,56 +18,6 @@ export const getUserById = async(req, res) => {
 }
 
 
-//update problems solved
-export const updateUserProblems = async(req, res) => {
-    try {
-        const id = req.params.id;
-        const problemId = req.params.problem_id;
-        const { submission } = req.body;
-    
-        const user = await User.findById(id);
-        const problem = await Problem.findById(problemId);
-    
-        if (!problem) {
-          return res.status(404).json({ message: "Cannot find Problem" });
-        }
-        if (!user) {
-          return res.status(404).json({ message: "Cannot find User" });
-        }
-    
-        if (user.attemptedProblems.some(p => p.problem_id.toString() === problemId)) {
-          return res.status(400).json({ message: "Problem already attempted" });
-        }
-    
-        const newSubmission = new Submission(
-            {
-                user_id: id,
-                problem_id: problemId,
-                code: submission.code,
-                language: submission.language,
-                verdict: submission.verdict,
-                memory: submission.memory
-            }
-            );
-
-        await newSubmission.save();
-    
-        problem.submissions.push(newSubmission._id);
-        await problem.save();
-    
-        user.attemptedProblems.push({
-          problem_id: problemId,
-          solved: submission.verdict === 'Accepted',
-          submission_id: newSubmission._id,
-          verdict: submission.verdict
-        });
-        await user.save();
-    
-        return res.status(200).json(user);
-      } catch (err) {
-        return res.status(500).json({ message: err.message });
-      }
-}
 
 
 //get all problems solved by user
@@ -97,5 +47,9 @@ export const getUserSubmissions = async(req, res) => {
         return res.status(500).json({message: err.message});
     }
 }
+
+//get ProblemSolved by user
+
+
 
 

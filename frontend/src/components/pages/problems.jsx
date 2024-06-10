@@ -7,6 +7,7 @@ import UpdateProblem from '../pages/updateProblem.jsx';
 import Navbar from '../commons/navbar.jsx';
 import CreateProblemModal from '../pages/createProblem.jsx';
 import './problems.css';
+import { REACT_APP_BASE_URL } from '../../../configs.js';
 
 const Problems = () => {
   const [problems, setProblems] = useState([]);
@@ -14,7 +15,10 @@ const Problems = () => {
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddTestcaseModal, setShowAddTestcaseModal] = useState(false);
-  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchDifficulty, setSearchDifficulty] = useState('');
+  const [searchTags, setSearchTags] = useState('');
+
   const [testCaseFormData, setTestCaseFormData] = useState({
     input: '',
     expected_output: '',  
@@ -32,7 +36,7 @@ const Problems = () => {
     const confirmDelete = window.confirm("Are you sure you want to delete this problem?");
     if (confirmDelete) {
       try {
-        const res = await axios.delete(`http://localhost:5000/api/problems/${id}`, {
+        const res = await axios.delete(`${REACT_APP_BASE_URL}/api/problems/${id}`, {
           headers: {
             Authorization: `${token}`,
           },
@@ -54,7 +58,7 @@ const Problems = () => {
   useEffect(() => {
     const getProblems = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/problems', {
+        const res = await axios.get(`${REACT_APP_BASE_URL}/api/problems`, {
           headers: {
             Authorization: `${token}`,
           },
@@ -96,7 +100,7 @@ const Problems = () => {
     e.preventDefault();
     try {  
       const res = await axios.post(
-        `http://localhost:5000/api/problems/${selectedProblem._id}/testcase`,
+        `${REACT_APP_BASE_URL}/api/problems/${selectedProblem._id}/testcase`,
         testCaseFormData,
         {
           headers: {
@@ -118,10 +122,71 @@ const Problems = () => {
     setTestCaseFormData({ ...testCaseFormData, [name]: value });
   };
 
+  const handleSearchChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "searchQuery") {
+      setSearchQuery(value);
+    } else if (name === "searchDifficulty") {
+      setSearchDifficulty(value);
+    } else if (name === "searchTags") {
+      setSearchTags(value);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.get(`${REACT_APP_BASE_URL}/api/problems/search`, {
+        params: {
+          title: searchQuery,
+          difficulty_level: searchDifficulty,
+          tags: searchTags,
+        },
+        headers: {
+          Authorization: `${token}`,
+        },
+      });
+      setProblems(res.data);
+    } catch (error) {
+      console.error('Error searching problems:', error);
+    }
+  };
+
   return (
     <>
       <Navbar />
       <div className="problems-container">
+        <Form inline onSubmit={handleSearch} className="mb-3">
+          <Form.Control
+            type="text"
+            placeholder="Search by Title"
+            value={searchQuery}
+            name="searchQuery"
+            onChange={handleSearchChange}
+            className="mr-sm-2"
+          />
+          <Form.Control
+            as="select"
+            value={searchDifficulty}
+            name="searchDifficulty"
+            onChange={handleSearchChange}
+            className="mr-sm-2"
+          >
+            <option value="">Select Difficulty</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </Form.Control>
+          <Form.Control
+            type="text"
+            placeholder="Search by Tags (comma-separated)"
+            value={searchTags}
+            name="searchTags"
+            onChange={handleSearchChange}
+            className="mr-sm-2"
+          />
+          <Button variant="outline-success" type="submit">Search</Button>
+        </Form>
         <Table striped bordered hover className="problems-table">
           <caption className="problems-caption">The set of Problems to practice</caption>
           <thead className="thead-dark">

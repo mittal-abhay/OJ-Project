@@ -1,9 +1,10 @@
 import express from 'express';
-import { getProblemList, createProblem, getProblemById, updateProblem, getTestCases, addTestcase, deleteProblem, deleteTestcase, getSampleTestCases} from '../controllers/problemController.js';
+import { getProblemList, createProblem, getProblemById, updateProblem, getTestCases, addTestcase, deleteProblem, deleteTestcase, getSampleTestCases, searchProblems} from '../controllers/problemController.js';
 import adminMiddleware from '../middlewares/adminMiddleware.js';
 const router = express.Router();
 
-
+//search
+router.get('/search', searchProblems);
 //getProblemList
 router.get('/', getProblemList);
 //getProblemById
@@ -23,5 +24,6 @@ router.get('/:id/testcase', getTestCases);
 router.post('/:id/testcase', adminMiddleware, addTestcase);
 //delete test case from a problem
 router.delete('/:id/testcase/:testcase_id', adminMiddleware, deleteTestcase);
+
 
 export default router;

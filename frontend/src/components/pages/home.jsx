@@ -1,29 +1,28 @@
 import React from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { Container, Row, Col, Button } from 'react-bootstrap';
+import img1 from '../../assets/Coding-illustration.avif'
 import Navbar from '../commons/navbar';
-import './home.css'; // Import the custom CSS file
-import img1 from '../../assets/Coding-illustration.avif'; // Adjust the path to your image
-
+import "./home.css";
 const Home = () => {
   return (
-    <div>
-      <Navbar />
-      <Container className="home-container">
-        <Row className="align-items-center">
-          <Col md={6} className="text-center text-md-left">
-            <p className="welcome-text">Welcome to CodeNow</p>
-            <p className="sub-text">Your one-stop destination for coding challenges and practice problems.</p>
-            <Link to="/problems">
-              <Button className="solve-button mb-2">Solve Problems</Button>
-            </Link>
-          </Col>
-          <Col md={6} className="text-center">
-            <img src={img1} alt="Coding" className="img-fluid" />
-          </Col>
-        </Row>
-      </Container>
-    </div>
+    <>
+    <Navbar/>
+    <Container className="fluid">
+      <Row >
+        <Col md={6} className="text-md-left mt-5">
+          <h1 className="display-4 mt-4">Welcome to CodeNow!!</h1>
+          <p className="lead mt-3">CodeNow is your premier platform for engaging coding challenges and comprehensive practice problems, designed to enhance your programming skills and prepare you for competitive coding and technical interviews.</p>
+          <Link to="/problems">
+            <button className="solve-btn">Start Solving Problems</button>
+          </Link>
+        </Col>
+        <Col md={6} className="text-center">
+          <img src={img1} alt="Coding" className="img-fluid" />
+        </Col>
+      </Row>
+    </Container>
+    </>
   );
 };
 

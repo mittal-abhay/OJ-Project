@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-
+import { REACT_APP_BASE_URL } from '../../configs.js';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -9,17 +9,26 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const token = Cookies.get('access_token');
-    const user = localStorage.getItem('user');
-    
+    const [user, setUser] = useState(null);
+    const [userInfo, setUserInfo] = useState(null);
 
     useEffect(() => {
         const isLogin = localStorage.getItem('isAuth'); 
         const user_role = localStorage.getItem('role');
+        const storedUser = localStorage.getItem('user');
+        const storedUserInfo = localStorage.getItem('userInfo');
+
         if (isLogin) {
             setIsAuth(true);
         }
         if (user_role) {
             setRole(user_role);
+        }
+        if (storedUser) {
+            setUser(storedUser);
+        }
+        if (storedUserInfo) {
+            setUserInfo(JSON.parse(storedUserInfo));
         }
         setIsLoading(false);  // Set loading to false after checking auth status
     }, []);
@@ -39,7 +48,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch(`${REACT_APP_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -52,11 +61,15 @@ export const AuthProvider = ({ children }) => {
             }
 
             const data = await response.json();
+
             setIsAuth(true);
-    
             localStorage.setItem('isAuth', true);
-            localStorage.setItem('user', data.user._id);
             
+            localStorage.setItem('user', data.user._id);
+            localStorage.setItem('userInfo', JSON.stringify(data.user));
+            setUser(data.user._id);
+            setUserInfo(data.user);
+
             Cookies.set('access_token', data.token, { expires: 1 });
             setAdminStatus(data.token);
         } catch (error) {
@@ -67,7 +80,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (formData) => {
         try {
-            const response = await fetch('http://localhost:5000/api/auth/register', {
+            const response = await fetch(`${REACT_APP_BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -86,8 +99,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async() => {
-        try{
-            const response = await fetch('http://localhost:5000/api/auth/logout', {
+        try {
+            const response = await fetch(`${REACT_APP_BASE_URL}/api/auth/logout`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -101,25 +114,25 @@ export const AuthProvider = ({ children }) => {
             
             setIsAuth(false);
             setRole('');
+            setUser(null);
+            setUserInfo(null);
 
             localStorage.removeItem('isAuth');
             localStorage.removeItem('role');
             localStorage.removeItem('user');
+            localStorage.removeItem('userInfo');
 
             Cookies.remove('access_token');
         } catch (error) {
             console.error('Logout error:', error);
         }
-        
-
     };
 
-
     return (
-        <AuthContext.Provider value={{ token, isAuth, isLoading, role, login, register, logout,user }}>
+        <AuthContext.Provider value={{ token, isAuth, isLoading, role, login, register, logout, user, userInfo }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-export const   useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext);

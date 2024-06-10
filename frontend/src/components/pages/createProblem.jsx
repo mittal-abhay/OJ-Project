@@ -3,8 +3,11 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Modal, Form, Button } from 'react-bootstrap';
+import { REACT_APP_BASE_URL } from '../../../configs.js';
+
 
 const CreateProblemModal = ({ show, handleClose }) => {
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -55,7 +58,7 @@ const CreateProblemModal = ({ show, handleClose }) => {
     e.preventDefault();
     console.log('Form data:', formData)
     try {
-      const res = await axios.post('http://localhost:5000/api/problems/create', formData, {
+      const res = await axios.post(`${REACT_APP_BASE_URL}/api/problems/create`, formData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `${token}`,

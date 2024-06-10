@@ -28,6 +28,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: "user"
     },
+    problemsSolved: {
+        type: Number,
+        default: 0
+    },
     attemptedProblems: [AttemptedProblemSchema]
 });
 

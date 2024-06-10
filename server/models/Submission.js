@@ -28,7 +28,10 @@ const SubmissionSchema = new mongoose.Schema({
     },
     comment: {
         type: String,
-    }
+    },
+    casespassed: {
+        type: Number,
+    },
 });
 
 const Submission = mongoose.model('Submission', SubmissionSchema);

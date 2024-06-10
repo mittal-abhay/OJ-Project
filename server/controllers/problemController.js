@@ -1,6 +1,7 @@
 import Problem from '../models/Problem.js';
 import Testcase from '../models/Testcase.js';
 
+
 // Create a new problem
 export const createProblem = async (req, res) => {
     try {
@@ -209,4 +210,35 @@ export const deleteTestcase = async (req, res) => {
         return res.status(500).json({message: err.message});
     }
 }
+
+
+
+// search by title, tags, difficulty_level (case insensitive)
+export const searchProblems = async (req, res) => {
+    try {
+        const { title, difficulty_level, tags } = req.query;
+        
+        // Create a query object
+        let query = {};
+
+        if (title) {
+            query.title = { $regex: title, $options: 'i' };
+        }
+
+        if (difficulty_level) {
+            query.difficulty_level = difficulty_level;
+        }
+
+        if (tags) {
+            query.tags = { $regex: tags.split(',').map(tag => tag.trim()).join('|'), $options: 'i' };
+        }
+
+        const problems = await Problem.find(query);
+        return res.status(200).json(problems);
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+};
+
+
 

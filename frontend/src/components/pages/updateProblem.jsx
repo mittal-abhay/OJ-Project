@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { REACT_APP_BASE_URL } from '../../../configs.js';
 
 const UpdateProblem = ({ problem, onHide, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -60,7 +61,7 @@ const UpdateProblem = ({ problem, onHide, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/problems/${problem._id}`, formData, {
+      await axios.put(`${REACT_APP_BASE_URL}/api/problems/${problem._id}`, formData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `${token}`,

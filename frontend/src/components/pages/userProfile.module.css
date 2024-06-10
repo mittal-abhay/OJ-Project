@@ -1,0 +1,60 @@
+.userProfileContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    margin: auto;
+    background-color: #F8F9FA;
+    margin-top: 20px;
+    height: 80vh;
+    width: 80%;    
+    border-radius: 20px;
+    border-color: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+
+.userImageBox{
+    display: flex;
+    background-color: #F8F9FA;
+    height: 60%;
+    width: 30%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.userImage{
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.userInfoBox{
+    display: flex;
+    flex-direction: column;
+    height: 60%;
+    width: 50%;
+    border-radius: 20px;
+    border-color: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.userInfoHeading{
+    font-size: 3rem;
+}
+
+.userInfoName{
+    font-size: 1.5rem;
+
+}
+
+.seesubmissions_btn{
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    margin-left: 10%;
+    margin-bottom: 10px;
+}

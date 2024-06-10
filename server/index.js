@@ -7,9 +7,8 @@ import problemRoutes from './routes/problemRoutes.js';
 import submissionRoutes from './routes/submissionRoutes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';    
-import generateFile from './generateFile.mjs';
-import execute  from './execute.mjs';
-import {submission} from "./submissionController.js"
+import {compiler}  from './Compiler/compilerController.js';
+import {submission} from "./Submit/submitController.js"
 
 // Load environment variables
 dotenv.config();
@@ -29,55 +28,16 @@ app.get('/', (req, res) => {
     res.send("Welcome to OJ server!");
 });
 
-app.post("/run", async (req, res) => {
-    try {
-        const { lang = "cpp", code, input = [] } = req.body;
-        if (!code) {
-          return res.status(400).send({ success: false, message: "[Code is Missing]" });
-        }
 
-        const inputArray = Array.isArray(input) ? input : [input];
 
-        const filepath = await generateFile(lang, code);
-      
-        const output = await execute(filepath, lang, inputArray);
-
-        return res.status(200).json({
-          success: true,
-          message: "Successful",
-          filepath,
-          output,
-        });
-      } catch (err) {
-        if (err.status == 1) {
-          return res.status(400).send({
-            success: false,
-            message: "Compilation Failed",
-            error: err,
-          });
-        }
-        if (err.status == 2) {
-          return res.status(401).send({
-            success: false,
-            message: "Execution Failed",
-            error: err,
-          });
-        }
-        return res.status(500).send({
-          success: false,
-          message: "Internal Server Error",
-          error: err.message,
-        });
-      }
-});
-
-app.post("/submit", submission);
 
 
 // Routes
 import authenticateToken from "./middlewares/authMiddleware.js";
 
 app.use('/api/auth', auth);
+app.post("/submit",submission);
+app.post("/run", compiler);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/problems', authenticateToken, problemRoutes);
 app.use('/api/submissions', authenticateToken, submissionRoutes);
