@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { REACT_APP_BASE_URL } from '../../configs.js';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -11,7 +10,7 @@ export const AuthProvider = ({ children }) => {
     const token = Cookies.get('access_token');
     const [user, setUser] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
-
+    const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
     useEffect(() => {
         const isLogin = localStorage.getItem('isAuth'); 
         const user_role = localStorage.getItem('role');

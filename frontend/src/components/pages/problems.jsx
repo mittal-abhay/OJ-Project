@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
-import { Table, Button, Modal, Form } from 'react-bootstrap';
+import { Table, Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext.jsx";
 import UpdateProblem from '../pages/updateProblem.jsx';
 import Navbar from '../commons/navbar.jsx';
 import CreateProblemModal from '../pages/createProblem.jsx';
 import './problems.css';
-import { REACT_APP_BASE_URL } from '../../../configs.js';
+
+
 
 const Problems = () => {
   const [problems, setProblems] = useState([]);
@@ -18,6 +19,7 @@ const Problems = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchDifficulty, setSearchDifficulty] = useState('');
   const [searchTags, setSearchTags] = useState('');
+  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
   const [testCaseFormData, setTestCaseFormData] = useState({
     input: '',
@@ -40,7 +42,7 @@ const Problems = () => {
           headers: {
             Authorization: `${token}`,
           },
-        });
+        }); 
         console.log('Problem deleted:', res.data);
         setProblems(problems.filter(problem => problem._id !== id)); // Remove the deleted problem from state
         navigate('/problems');
@@ -156,7 +158,10 @@ const Problems = () => {
     <>
       <Navbar />
       <div className="problems-container">
+       
         <Form inline onSubmit={handleSearch} className="mb-3">
+        <Row>
+        <Col>
           <Form.Control
             type="text"
             placeholder="Search by Title"
@@ -165,6 +170,8 @@ const Problems = () => {
             onChange={handleSearchChange}
             className="mr-sm-2"
           />
+          </Col>
+          <Col>
           <Form.Control
             as="select"
             value={searchDifficulty}
@@ -177,6 +184,8 @@ const Problems = () => {
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
           </Form.Control>
+          </Col>
+          <Col>
           <Form.Control
             type="text"
             placeholder="Search by Tags (comma-separated)"
@@ -185,7 +194,10 @@ const Problems = () => {
             onChange={handleSearchChange}
             className="mr-sm-2"
           />
-          <Button variant="outline-success" type="submit">Search</Button>
+          </Col>
+         
+        </Row>
+          <Button variant="outline-success mt-3" type="submit">Search</Button>
         </Form>
         <Table striped bordered hover className="problems-table">
           <caption className="problems-caption">The set of Problems to practice</caption>

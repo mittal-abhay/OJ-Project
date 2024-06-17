@@ -7,7 +7,6 @@ import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import AceEditor from 'react-ace';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
-import { REACT_APP_BASE_URL } from '../../../configs.js';
 // Import Ace Editor modes and themes
 import 'ace-builds/src-noconflict/mode-c_cpp';
 import 'ace-builds/src-noconflict/theme-monokai';  // Dark theme
@@ -31,7 +30,7 @@ const Problem = () => {
   const [codeError, setCodeError] = useState(''); // State for code error
   const [language, setLanguage] = useState('cpp'); // State for language
   const [loading, setLoading] = useState(false);
-  
+  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
   useEffect(() => {
     const fetchProblem = async () => {
       try {

@@ -7,6 +7,6 @@ RUN apk update && apk add --no-cache openjdk17
 COPY package.json . 
 RUN npm i
 COPY . . 
-EXPOSE 8000
+EXPOSE 5000
 CMD ["node", "index.js"]
 

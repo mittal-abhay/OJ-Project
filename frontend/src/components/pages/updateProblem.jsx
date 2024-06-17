@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { REACT_APP_BASE_URL } from '../../../configs.js';
 
 const UpdateProblem = ({ problem, onHide, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -20,7 +19,7 @@ const UpdateProblem = ({ problem, onHide, onUpdate }) => {
   const [errors, setErrors] = useState({});
 
   const { token } = useAuth();
-
+  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith('testcases') || name.startsWith('sample_testcases')) {

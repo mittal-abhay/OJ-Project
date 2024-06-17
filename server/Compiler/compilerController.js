@@ -10,6 +10,7 @@ export const compiler = async (req, res) => {
         error: { status: 4 }, //E4
       });
     }
+    
     const filepath = generateFile(lang, code);
     const output = await execute(filepath, lang, inputValue);
    

@@ -3,11 +3,10 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Modal, Form, Button } from 'react-bootstrap';
-import { REACT_APP_BASE_URL } from '../../../configs.js';
+
 
 
 const CreateProblemModal = ({ show, handleClose }) => {
-
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
@@ -22,7 +21,7 @@ const CreateProblemModal = ({ show, handleClose }) => {
     sample_testcases: [{ input: '', expected_output: '' }],
   });
   const [errors, setErrors] = useState({});
-
+  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
   const { token } = useAuth();
 
   const handleChange = (e) => {
