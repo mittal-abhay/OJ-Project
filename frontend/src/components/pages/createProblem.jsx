@@ -21,7 +21,7 @@ const CreateProblemModal = ({ show, handleClose }) => {
     sample_testcases: [{ input: '', expected_output: '' }],
   });
   const [errors, setErrors] = useState({});
-  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
   const { token } = useAuth();
 
   const handleChange = (e) => {
@@ -57,7 +57,7 @@ const CreateProblemModal = ({ show, handleClose }) => {
     e.preventDefault();
     console.log('Form data:', formData)
     try {
-      const res = await axios.post(`${REACT_APP_BASE_URL}/api/problems/create`, formData, {
+      const res = await axios.post(`${BASE_URL}/api/problems/create`, formData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `${token}`,

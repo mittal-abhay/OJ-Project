@@ -1,65 +1,103 @@
-import React, { useState } from 'react';
-import { Container, Typography, Paper, TextField, Button, Select, MenuItem, FormControl, InputLabel, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext.jsx';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { valid } from "../../utils/valid";
+import { toast } from "react-toastify";
+import {useAuth} from "../../context/AuthContext"
+import styles from "../styles/register.module.css";
 
-const RegisterPage = ({setIsLogin}) => {
-  const [formData, setFormData] = useState({
-    firstname: '',
-    lastname: '',
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+
+const Register = ({setIsLogin}) => {
+  const [show, setShow] = useState(false);
+  const handleClick = () => setShow(!show);
   const { register } = useAuth();
+  const initialState = {
+    firstname: "",
+    lastname: "",
+    email: "",
+    password: ""
+  };
+  const [userData, setUserData] = useState(initialState);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { firstname, lastname,email, password } = userData;
+
+
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setUserData({ ...userData, [name]: value });
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { firstname, lastname, email, password } = formData;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
-      return
-    }
-
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-    if (!passwordRegex.test(password)) {
-      setError('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one digit, and one special character.');
+  
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    const message = valid(email, password);
+    if (message) {
+      toast.warn(message);
+      setIsLoading(false);
       return;
     }
 
     try {
-      await register({ firstname, lastname, email, password });
+      await register(userData);
+      toast.info("User Registered Successfully");
+      setIsLoading(false);
       setIsLogin(true);
-    
-    } catch (error) {
-      console.error('Error:', error);
-      setError(error.message);
+    } catch (err) {
+      toast.error(err);
+      setIsLoading(false);
+      return;
     }
   };
-
   return (
-    <Container maxWidth="xs" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom>Register</Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField label="Firstname" name="firstname" variant="outlined" fullWidth margin="normal" value={formData.firstname} onChange={handleChange} />
-          <TextField label="Lastname" name="lastname" variant="outlined" fullWidth margin="normal" value={formData.lastname} onChange={handleChange} />
-          <TextField label="Email" name="email" variant="outlined" fullWidth margin="normal" value={formData.email} onChange={handleChange} />
-          <TextField label="Password" name="password" variant="outlined" type="password" fullWidth margin="normal" value={formData.password} onChange={handleChange} />
-          <Button type="submit" variant="contained" color="primary" fullWidth>Sign Up</Button>
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        </form>
-      </Paper>
-    </Container>
+
+    <div className={styles.container}>
+      <h1 className={styles.heading}>Create Account</h1>
+      <div className={styles.form}>
+        <div className={styles.input}>
+          <input
+            type="text"
+            name="firstname"
+            value={firstname}
+            onChange={handleChange}
+            placeholder="Firstname"
+          />
+        </div>
+        <div className={styles.input}>
+          <input
+            type="text"
+            name="lastname"
+            value={lastname}
+            onChange={handleChange}
+            placeholder="Lastname"
+          />
+        </div>
+        
+        <div className={styles.input}>
+          <input
+            type="email"
+            name="email"
+            value={email}
+            onChange={handleChange}
+            placeholder="Email"
+          />
+        </div>
+        <div className={styles.input}>
+          <input
+            type={show ? "text" : "password"}
+            name="password"
+            value={password}
+            onChange={handleChange}
+            placeholder="Password"
+          />
+          <span className={styles.showPassword} onClick={handleClick}>
+            {show ? "Hide" : "Show"}
+          </span>
+        </div>
+        <button className={styles.registerButton} onClick={handleSubmit}>Register</button>
+        </div>
+   
+      </div>
   );
 };
 
-export default RegisterPage;
+export default Register;

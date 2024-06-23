@@ -30,11 +30,11 @@ const Problem = () => {
   const [codeError, setCodeError] = useState(''); // State for code error
   const [language, setLanguage] = useState('cpp'); // State for language
   const [loading, setLoading] = useState(false);
-  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
   useEffect(() => {
     const fetchProblem = async () => {
       try {
-        const res = await axios.get(`${REACT_APP_BASE_URL}/api/problems/${id}`, {
+        const res = await axios.get(`${BASE_URL}/api/problems/${id}`, {
           headers: {
             Authorization: `${token}`,
           },
@@ -47,7 +47,7 @@ const Problem = () => {
 
     const fetchTestCases = async () => {
       try {
-        const res = await axios.get(`${REACT_APP_BASE_URL}/api/problems/${id}/testcase`, {
+        const res = await axios.get(`${BASE_URL}/api/problems/${id}/testcase`, {
           headers: {
             Authorization: `${token}`,
           },
@@ -60,7 +60,7 @@ const Problem = () => {
 
     const fetchSampleTestCases = async () => {
       try {
-        const res = await axios.get(`${REACT_APP_BASE_URL}/api/problems/${id}/sampletestcase`, {
+        const res = await axios.get(`${BASE_URL}/api/problems/${id}/sampletestcase`, {
           headers: {
             Authorization: `${token}`,
           },
@@ -95,7 +95,7 @@ const Problem = () => {
     try {
       const stestCaseInput = sampleTestCases.map((samplecase) => samplecase.input);
       setSampleTestCaseInput(stestCaseInput);
-      const res = await axios.post(`${REACT_APP_BASE_URL}/run`, {
+      const res = await axios.post(`${BASE_URL}/run`, {
         code: userCode,
         inputValue: stestCaseInput,// Send custom input
         lang: language,
@@ -126,7 +126,7 @@ const Problem = () => {
     setResult('');
     try {
 
-      const res = await axios.post( `${REACT_APP_BASE_URL}/run`, {
+      const res = await axios.post( `${BASE_URL}/run`, {
         code: userCode,
         inputValue: [customInput], // Send custom input
         lang: language,
@@ -157,7 +157,7 @@ const Problem = () => {
     setResult('');
     try {
 
-      const res = await axios.post(`${REACT_APP_BASE_URL}/submit`, {
+      const res = await axios.post(`${BASE_URL}/submit`, {
         user_id: user,
         prob_id: id,
         code: userCode,
@@ -229,7 +229,7 @@ const Problem = () => {
 
 
   if (!problem) {
-    return <div>Problem doesn't exist</div>;
+    return <div>Loading</div>;
   }
   return (
     <div>

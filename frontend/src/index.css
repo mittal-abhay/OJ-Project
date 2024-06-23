@@ -1,4 +1,15 @@
-@tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-  
+:root {
+  --color-primary-400: hsl(231, 99%, 66%);
+  --color-primary-500: hsl(231, 100%, 60%);
+  --color-white: #fff;
+  --color-background: hsl(231, 100%, 97%);
+  --color-background-light: hsl(231, 100%, 99%);
+  --color-background-dark: hsl(231, 100%, 94%);
+  --color-border-light: hsl(0, 0%, 91%);
+  --color-text: hsl(210, 5%, 10%);
+  --color-text-mid: hsl(212, 13%, 51%);
+  --color-shadow-light: hsl(0, 0%, 96%);
+  --color-overlay: hsla(212, 13%, 0%, 0.1);
+  --color-error: #da3737;
+  --color-black: #000;
+}

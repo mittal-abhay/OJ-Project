@@ -12,21 +12,28 @@ import Navbar from './components/commons/navbar.jsx';
 import CreateProblem from './components/pages/createProblem.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {useState} from 'react';
+import { ToastContainer} from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
+import LeaderBoard from './components/pages/Leaderboard.jsx';
 
 function App() {
     const { isLoading, role, isAuth } = useAuth();
+    
     if (isLoading) {
         return <div>Loading...</div>; 
     }
 
     return (
       <>
+      <ToastContainer theme="colored" />
+
         <Routes>
             <Route exact path="/" element={isAuth? <Home/> : <LandingPage/>} />
             <Route exact path="/userProfile" element={isAuth ? <UserProfile />: <Navigate to = "/"/> } />
             <Route exact path="/home" element={isAuth? <Home />: <Navigate to = "/"/> } />
             <Route exact path="/problems" element={isAuth ? <Problems /> : <Navigate to="/" />} />
             <Route exact path="/problem/:id" element={isAuth ? <Problem /> : <Navigate to="/" />} />
+            <Route exact path="/leaderboard" element={isAuth ? <LeaderBoard /> : <Navigate to="/" />} />
         </Routes>
         </>
     );

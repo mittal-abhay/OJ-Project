@@ -23,6 +23,7 @@ const NavigationBar = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto"> {/* Align links to the right */}
+                        <Nav.Link as={Link} to="/leaderboard">Leaderboard</Nav.Link>
                         <Nav.Link as={Link} to="/problems">Problems</Nav.Link>
                         {userInfo && (
                             <NavDropdown title={`${userInfo.firstname} ${userInfo.lastname}`} id="user-profile-dropdown">

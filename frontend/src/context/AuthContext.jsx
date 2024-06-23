@@ -10,12 +10,19 @@ export const AuthProvider = ({ children }) => {
     const token = Cookies.get('access_token');
     const [user, setUser] = useState(null);
     const [userInfo, setUserInfo] = useState(null);
-    const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+    const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
     useEffect(() => {
         const isLogin = localStorage.getItem('isAuth'); 
         const user_role = localStorage.getItem('role');
         const storedUser = localStorage.getItem('user');
         const storedUserInfo = localStorage.getItem('userInfo');
+        
+        if(!token){
+            localStorage.removeItem('isAuth');
+            localStorage.removeItem('role');
+            localStorage.removeItem('user');
+            localStorage.removeItem('userInfo');
+        }
 
         if (isLogin) {
             setIsAuth(true);
@@ -42,12 +49,11 @@ export const AuthProvider = ({ children }) => {
         const user_role = decodedToken.role;
         setRole(user_role);
         localStorage.setItem('role', user_role);
-        console.log('Role:', user_role);
     };
 
     const login = async (email, password) => {
         try {
-            const response = await fetch(`${REACT_APP_BASE_URL}/api/auth/login`, {
+            const response = await fetch(`${BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -79,7 +85,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (formData) => {
         try {
-            const response = await fetch(`${REACT_APP_BASE_URL}/api/auth/register`, {
+            const response = await fetch(`${BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -99,7 +105,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async() => {
         try {
-            const response = await fetch(`${REACT_APP_BASE_URL}/api/auth/logout`, {
+            const response = await fetch(`${BASE_URL}/api/auth/logout`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

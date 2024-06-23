@@ -19,7 +19,7 @@ const UpdateProblem = ({ problem, onHide, onUpdate }) => {
   const [errors, setErrors] = useState({});
 
   const { token } = useAuth();
-  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith('testcases') || name.startsWith('sample_testcases')) {
@@ -60,7 +60,7 @@ const UpdateProblem = ({ problem, onHide, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${REACT_APP_BASE_URL}/api/problems/${problem._id}`, formData, {
+      await axios.put(`${BASE_URL}/api/problems/${problem._id}`, formData, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `${token}`,

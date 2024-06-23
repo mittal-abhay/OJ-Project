@@ -1,47 +1,109 @@
-import React, { useState } from 'react';
-import { Container, Typography, Paper, TextField, Button, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../context/AuthContext.jsx';
+import { validateEmail } from "../../utils/valid";
+import { toast } from "react-toastify";
+import styles from "../styles/login.module.css";
 
-const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
+
+const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const [show, setShow] = useState(false);
+  const handleClick = () => setShow(!show);
+  const initialState = {
+    email: "",
+    password: "",
   };
+  const { login } = useAuth();
+  const [userData, setUserData] = useState(initialState);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { email, password } = formData;
+  const { email, password } = userData;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUserData({ ...userData, [name]: value });
+  };
+  const handleSubmit = async () => {
+    setLoading(true);
 
+    if (!email || !password) {
+      toast.warn("Please enter all the required fields");
+      setLoading(false);
+      return;
+    }
+    if (!validateEmail(email)) {
+      toast.warn("Invalid Email");
+      setLoading(false);
+      return;
+    }
     try {
       await login(email, password);
       navigate('/home');
-    } catch (error) {
-      console.error('Error:', error);
-      setError(error.message);
+      toast.success("User Logged In successfully");
+      setLoading(false);
+    } catch (err) {
+      toast.error("Login Failed: Either the email or password is incorrect");
+      setLoading(false);
+      return;
     }
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom>Login</Typography>
-        <form onSubmit={handleSubmit}>
-          <TextField label="Email" name="email" variant="outlined" fullWidth margin="normal" value={formData.email} onChange={handleChange} />
-          <TextField label="Password" name="password" variant="outlined" type="password" fullWidth margin="normal" value={formData.password} onChange={handleChange} />
-          <Button type="submit" variant="contained" color="primary" fullWidth>Sign In</Button>
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        </form>
-      </Paper>
-    </Container>
+    <div className={styles.container}>
+    <h1 className={styles.heading}>Welcome Back</h1>
+    <button
+      className={styles.guest}
+      onClick={() => {
+        setUserData({
+          email: "jim@gmail.com",
+          password: "1234",
+        });
+      }}
+      disabled={loading}
+    >
+      Continue as Guest
+    </button>
+    <div className={styles.divider}>
+      <span className={styles.line}></span>
+      <span className={styles.text}>Or login with username</span>
+      <span className={styles.line}></span>
+    </div>
+    <div className={styles.form}>
+      <div className={styles.inputContainer}>
+        <input
+          type="text"
+          name="email"
+          id="email"
+          placeholder="Email"
+          value={email}
+          onChange={handleChange}
+        />
+      </div>
+      <div className={styles.inputContainer}>
+        <input
+          type={show ? "text" : "password"}
+          name="password"
+          id="password"
+          placeholder="Password"
+          value={password}
+          onChange={handleChange}
+        />
+        <span
+          className={styles.showPassword}
+          onClick={(e) => {
+            userData.email !== "jim@gmail.com" &&
+              handleClick(e);
+          }}
+        >
+          {show ? "Hide" : "Show"}
+        </span>
+      </div>
+      <button className={styles.loginButton} onClick={handleSubmit}>
+        {loading ? "Loading..." : "Login"}
+      </button>
+    </div>
+  </div>
   );
 };
 
-export default LoginPage;
+export default Login;

@@ -8,6 +8,7 @@ import { Table, Button, Modal } from 'react-bootstrap';
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-c_cpp"; // or any other mode you need
 import "ace-builds/src-noconflict/theme-monokai"; // dark theme
+import { toast } from 'react-toastify';
 
 const UserProfile = () => {
   const { user,token } = useAuth();
@@ -16,12 +17,12 @@ const UserProfile = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState({ comment: '', code: '' });
   const [userProfile, setUserProfile] = useState({});
-  const REACT_APP_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
   useEffect (() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${REACT_APP_BASE_URL}/api/users/${user}`, {
+        const res = await axios.get(`${BASE_URL}/api/users/${user}`, {
           headers: {
             Authorization: `${token}`
           }
@@ -36,15 +37,18 @@ const UserProfile = () => {
 
   const seeSubmissions = async () => {
     try {
-      const res = await axios.get(`${REACT_APP_BASE_URL}/api/users/${user}/submissions`, {
+      const res = await axios.get(`${BASE_URL}/api/users/${user}/submissions`, {
         headers: {
           Authorization: `${token}`
         }
       });
+      if(res.data.length === 0){
+        toast.error("No submissions found");
+      }
       setUserSubmissions(res.data);
-    
+      
       const titles = await Promise.all(res.data.map(async (submission) => {
-        const titleRes = await axios.get(`${REACT_APP_BASE_URL}/api/problems/${submission.problem_id}`, {
+        const titleRes = await axios.get(`${BASE_URL}/api/problems/${submission.problem_id}`, {
           headers: {
             Authorization: `${token}`
           }
@@ -65,7 +69,7 @@ const UserProfile = () => {
 
   const handleGetCode = async (id, comment) => {
     try {
-      const res = await axios.get(`${REACT_APP_BASE_URL}/api/submissions/code/${id}`, {
+      const res = await axios.get(`${BASE_URL}/api/submissions/code/${id}`, {
         headers: {
           Authorization: `${token}`
         }
@@ -74,6 +78,7 @@ const UserProfile = () => {
       setModalVisible(true);
     } catch (err) {
       console.log(err);
+      toast.error("Failed to get code");
     }
   };
 
