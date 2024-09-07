@@ -37,6 +37,7 @@ const ProblemSchema = new mongoose.Schema({
     },
     submissions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Submission' }],
     testcases: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Testcase' }],
+    solvedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     execution_time_limit: { 
         type: Number, 
         default: 2 

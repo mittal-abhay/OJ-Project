@@ -28,7 +28,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: "user"
     },
-    problemsSolved: {
+    problemsSolvedCount: {
         type: Number,
         default: 0
     },

@@ -6,10 +6,11 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import UpdateProblem from '../pages/updateProblem.jsx';
 import Navbar from '../commons/navbar.jsx';
 import CreateProblemModal from '../pages/createProblem.jsx';
-import './problems.css';
+import '../styles/problems.css';
 
 
 const Problems = () => {
+
   const [problems, setProblems] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedProblem, setSelectedProblem] = useState(null);
@@ -18,15 +19,16 @@ const Problems = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchDifficulty, setSearchDifficulty] = useState('');
   const [searchTags, setSearchTags] = useState('');
-  const [leaderboard, setLeaderboard] = useState([]);
-  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
-
+  const [errors, setErrors] = useState({});
+  
   const [testCaseFormData, setTestCaseFormData] = useState({
     input: '',
     expected_output: '',
   });
-  const { token, role } = useAuth();
+  
+  const { userInfo, role, customFetch } = useAuth();
   const navigate = useNavigate();
+
 
   const handleClick = (id) => {
     return () => {
@@ -38,12 +40,7 @@ const Problems = () => {
     const confirmDelete = window.confirm("Are you sure you want to delete this problem?");
     if (confirmDelete) {
       try {
-        const res = await axios.delete(`${BASE_URL}/api/problems/${id}`, {
-          headers: {
-            Authorization: `${token}`,
-          },
-        });
-        console.log('Problem deleted:', res.data);
+        const res = await customFetch(`/api/problems/${id}`,"DELETE");
         setProblems(problems.filter(problem => problem._id !== id));
         navigate('/problems');
       } catch (error) {
@@ -57,24 +54,40 @@ const Problems = () => {
     setShowUpdateModal(true);
   };
 
+
+
+  let attemptedProblems = [];
   useEffect(() => {
+      //get attempted problems of user
+    
+      const getAttemptedProblems = async () => {
+        try {
+          const res = await customFetch(`/api/users/${userInfo._id}/problems`, "GET");
+          attemptedProblems = res;
+        } catch (error) {
+          console.error('Error fetching attempted problems:', error);
+        }
+      };
+
+
     const getProblems = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/problems`, {
-          headers: {
-            Authorization: `${token}`,
-          },
+        const res = await customFetch(`/api/problems`, "GET");
+        res.forEach(problem => {
+          problem.solved = attemptedProblems?.some(attemptedProblem => attemptedProblem.problem_id === problem._id && attemptedProblem.solved);
         });
-        setProblems(res.data);
+        setProblems(res);
       } catch (error) {
         console.error('Error fetching problems:', error);
       }
     };
 
-
-
+   if(userInfo){
+    getAttemptedProblems();
+   }
     getProblems();
-  }, [token]);
+  }, []);
+
 
   const handleCloseUpdateModal = () => {
     setShowUpdateModal(false);
@@ -99,26 +112,21 @@ const Problems = () => {
 
   const handleCloseAddTestcaseModal = () => {
     setShowAddTestcaseModal(false);
+    setErrors({});
+    setTestCaseFormData({
+      input: '',
+      expected_output: '',
+    });
   };
 
   const handleAddTestcase = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/problems/${selectedProblem._id}/testcase`,
-        testCaseFormData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `${token}`,
-          },
-        }
-      );
-      console.log('Test case added:', res.data);
-      // You may want to update the problem's test cases here or refetch the problem details
+      const res = await customFetch(`/api/problems/${selectedProblem._id}/testcase`, "POST", testCaseFormData);
       setShowAddTestcaseModal(false);
     } catch (error) {
       console.error('Error adding test case:', error);
+      setErrors(error);
     }
   };
 
@@ -141,17 +149,13 @@ const Problems = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.get(`${BASE_URL}/api/problems/search`, {
-        params: {
+      const res = await customFetch(`/api/problems/search`, "GET", null,
+        {
           title: searchQuery,
           difficulty_level: searchDifficulty,
           tags: searchTags,
-        },
-        headers: {
-          Authorization: `${token}`,
-        },
-      });
-      setProblems(res.data);
+        });
+        setProblems(res);
     } catch (error) {
       console.error('Error searching problems:', error);
     }
@@ -161,10 +165,8 @@ const Problems = () => {
   const getBadgeVariant = (difficulty) => {
     switch (difficulty.toLowerCase()) {
       case 'easy':
-        console.log('easy');
         return 'success';
       case 'medium':
-        console.log('medium');
         return 'warning';
       case 'hard':
         return 'danger';
@@ -236,8 +238,9 @@ const Problems = () => {
               </tr>
             </thead>
             <tbody>
-              {problems.map((problem) => (
-                <tr key={problem._id} onClick={handleClick(problem._id)} className="problem-row">
+              {problems?.map((problem) => (
+                <tr key={problem._id} onClick={handleClick(problem._id)}  
+                className={`problem-row ${problem.solved ? 'solved-problem' : ''}`}>
                   <td>
                     <div className="d-flex px-2 py-1">
                       <div className="d-flex flex-column justify-content-center">
@@ -299,6 +302,7 @@ const Problems = () => {
               ))}
             </tbody>
           </Table>
+          <br/>
           {role === 'admin' && (
             <Button variant="primary" onClick={handleShowCreateModal} className="mb-3">
               Add a Problem
@@ -321,7 +325,8 @@ const Problems = () => {
         )}
 
         {/* Add Test Case Modal */}
-        <Modal show={showAddTestcaseModal} onHide={handleCloseAddTestcaseModal}>
+        <Modal show={showAddTestcaseModal} onHide={handleCloseAddTestcaseModal} >
+        {errors.message && <div className="alert alert-danger">{errors.message}</div>}
           <Modal.Header closeButton>
             <Modal.Title>Add Test Case</Modal.Title>
           </Modal.Header>

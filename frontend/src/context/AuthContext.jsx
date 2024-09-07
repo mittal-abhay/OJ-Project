@@ -1,55 +1,54 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { useNavigate } from "react-router-dom";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+    const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+
+
     const [isAuth, setIsAuth] = useState(false);
     const [role, setRole] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
-    const token = Cookies.get('access_token');
     const [user, setUser] = useState(null);
-    const [userInfo, setUserInfo] = useState(null);
-    const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
-    useEffect(() => {
-        const isLogin = localStorage.getItem('isAuth'); 
-        const user_role = localStorage.getItem('role');
-        const storedUser = localStorage.getItem('user');
-        const storedUserInfo = localStorage.getItem('userInfo');
-        
-        if(!token){
-            localStorage.removeItem('isAuth');
-            localStorage.removeItem('role');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userInfo');
-        }
+    const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
+    const token = Cookies.get('access_token');
+    
+    const getUserInfo = async (token) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/auth/me`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${token}`
+                }
+            });
 
-        if (isLogin) {
-            setIsAuth(true);
+            if(response.ok) {
+                const data = await response.json();
+                setIsAuth(true);
+                setRole(data.userData.role);
+                setUser(data.userData);
+                setIsLoading(false); 
+            }else{
+                setIsAuth(false);
+                setRole('');
+                setUser(null);
+                setIsLoading(false);
+            }
+        } catch (error) {
+            setIsAuth(false);
+            setRole('');
+            setUser(null);
+            setIsLoading(false);
         }
-        if (user_role) {
-            setRole(user_role);
-        }
-        if (storedUser) {
-            setUser(storedUser);
-        }
-        if (storedUserInfo) {
-            setUserInfo(JSON.parse(storedUserInfo));
-        }
-        setIsLoading(false);  // Set loading to false after checking auth status
+    }
+
+
+    useEffect(()  => {
+        getUserInfo(token);
     }, []);
 
-    const decodeToken = (token) => {
-        const payload = token.split('.')[1];
-        return JSON.parse(atob(payload));
-    };
-
-    const setAdminStatus = (token) => {
-        const decodedToken = decodeToken(token);
-        const user_role = decodedToken.role;
-        setRole(user_role);
-        localStorage.setItem('role', user_role);
-    };
 
     const login = async (email, password) => {
         try {
@@ -64,19 +63,10 @@ export const AuthProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('Invalid email or password');
             }
-
             const data = await response.json();
-
-            setIsAuth(true);
-            localStorage.setItem('isAuth', true);
-            
-            localStorage.setItem('user', data.user._id);
-            localStorage.setItem('userInfo', JSON.stringify(data.user));
-            setUser(data.user._id);
-            setUserInfo(data.user);
-
             Cookies.set('access_token', data.token, { expires: 1 });
-            setAdminStatus(data.token);
+            getUserInfo(data.token);
+            
         } catch (error) {
             console.error('Login error:', error);
             throw error;
@@ -116,25 +106,56 @@ export const AuthProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('Logout failed');
             }
-            
             setIsAuth(false);
             setRole('');
             setUser(null);
-            setUserInfo(null);
-
-            localStorage.removeItem('isAuth');
-            localStorage.removeItem('role');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userInfo');
-
             Cookies.remove('access_token');
+            navigate('/login');
         } catch (error) {
             console.error('Logout error:', error);
         }
     };
 
+    const customFetch = async (path, method, body, query) => {
+        try {
+            let url = `${BASE_URL}${path}`;
+            
+            // If it's a GET request and there are query parameters, add them to the URL
+            if (method === 'GET' && query) {
+                const params = new URLSearchParams(query);
+                url += `?${params.toString()}`;
+            }
+    
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${token}`
+                }
+            };
+    
+            // Only add body for non-GET requests
+            if (method !== 'GET' && body) {
+                options.body = JSON.stringify(body);
+            }
+    
+            const response = await fetch(url, options);
+    
+            if (response.ok) {
+                return await response.json();
+            }
+            if (response.status === 401) {
+                logout();
+            } else {
+                throw await response.json();
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
+        }
+    }
     return (
-        <AuthContext.Provider value={{ token, isAuth, isLoading, role, login, register, logout, user, userInfo }}>
+        <AuthContext.Provider value={{  token, isLoading, login, register, logout, getUserInfo, role, isAuth, user, customFetch }}>
             {children}
         </AuthContext.Provider>
     );

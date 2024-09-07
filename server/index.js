@@ -7,8 +7,7 @@ import problemRoutes from './routes/problemRoutes.js';
 import submissionRoutes from './routes/submissionRoutes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';    
-import {compiler}  from './Compiler/compilerController.js';
-import {submission} from "./Submit/submitController.js"
+
 
 // Load environment variables
 dotenv.config();
@@ -29,17 +28,12 @@ app.get('/', (req, res) => {
 });
 
 
-
-
-
 // Routes
 import authenticateToken from "./middlewares/authMiddleware.js";
 
 app.use('/api/auth', auth);
-app.post("/submit",submission);
-app.post("/run", compiler);
-app.use('/api/users', authenticateToken, userRoutes);
-app.use('/api/problems', authenticateToken, problemRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/problems', problemRoutes);
 app.use('/api/submissions', authenticateToken, submissionRoutes);
 
 

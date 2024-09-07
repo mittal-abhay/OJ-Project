@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import img1 from '../../assets/Coding-illustration.avif'
 import Navbar from '../commons/navbar';
-import "./home.css";
+import "../styles/home.css";
 const Home = () => {
   return (
     <>

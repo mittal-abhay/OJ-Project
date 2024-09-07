@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const UpdateProblem = ({ problem, onHide, onUpdate }) => {
+  const { customFetch } = useAuth();
+
   const [formData, setFormData] = useState({
     title: problem.title,
     statement: problem.statement,
@@ -16,67 +17,122 @@ const UpdateProblem = ({ problem, onHide, onUpdate }) => {
     testcases: [],
     sample_testcases: [],
   });
+
+  const [oldTestcases, setOldTestcases] = useState([]);
+  const [oldSampleTestcases, setOldSampleTestcases] = useState([]);
   const [errors, setErrors] = useState({});
 
-  const { token } = useAuth();
-  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name.startsWith('testcases') || name.startsWith('sample_testcases')) {
-      const [_, field, index] = name.split('-');
-      const newTestcases = [...formData[name.startsWith('testcases') ? 'testcases' : 'sample_testcases']];
-      if (type === 'checkbox') {
-        newTestcases[index][field] = checked;
-      } else {
-        newTestcases[index][field] = value;
-      }
-      setFormData({ ...formData, [name.startsWith('testcases') ? 'testcases' : 'sample_testcases']: newTestcases });
-    } else {
-      setFormData({ ...formData, [name]: value });
+  useEffect(() => {
+    getTestcases();
+    getSampleTestcases();
+  }, []);
+
+  const getTestcases = async () => {
+    try {
+      const response = await customFetch(`/api/problems/${problem._id}/testcase`, "GET");
+      setOldTestcases(response.map(tc => ({ ...tc, isOld: true, isEditing: false })));
+    } catch (error) {
+      console.error('Error getting testcases:', error);
+    } 
+  };
+
+  const getSampleTestcases = async () => {
+    try {
+      const response = await customFetch(`/api/problems/${problem._id}/sampletestcase`, "GET");
+      setOldSampleTestcases(response.map(tc => ({ ...tc, isOld: true, isEditing: false })));
+    } catch (error) { 
+      console.error('Error getting sample testcases:', error);
     }
+  };
+
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      testcases: [...oldTestcases, ...prev.testcases.filter(tc => !tc.isOld)],
+      sample_testcases: [...oldSampleTestcases, ...prev.sample_testcases.filter(tc => !tc.isOld)],
+    }));
+  }, [oldTestcases, oldSampleTestcases]);
+
+  const handleChange = (e, index, type) => {
+    const { name, value } = e.target;
+    const updatedTestcases = [...formData[type]];
+    updatedTestcases[index] = { ...updatedTestcases[index], [name]: value };
+    setFormData({ ...formData, [type]: updatedTestcases });
   };
 
   const addTestcase = (type) => {
-    if (type === 'testcases') {
-      setFormData({
-        ...formData,
-        testcases: [...formData.testcases, { input: '', expected_output: '' }],
-      });
-    } else if (type === 'sample_testcases') {
-      setFormData({
-        ...formData,
-        sample_testcases: [...formData.sample_testcases, { input: '', expected_output: '' }],
-      });
-    }
+    setFormData({
+      ...formData,
+      [type]: [...formData[type], { input: '', expected_output: '', isOld: false, isEditing: true, is_sample: type === 'sample_testcases' }],
+    });
   };
 
   const removeTestcase = (index, type) => {
-    const newTestcases = [...formData[type]];
-    newTestcases.splice(index, 1);
+    const newTestcases = formData[type].filter((_, i) => i !== index);
     setFormData({ ...formData, [type]: newTestcases });
   };
 
+  const toggleEdit = (index, type) => {
+    const updatedTestcases = [...formData[type]];
+    updatedTestcases[index] = { ...updatedTestcases[index], isEditing: !updatedTestcases[index].isEditing };
+    setFormData({ ...formData, [type]: updatedTestcases });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${BASE_URL}/api/problems/${problem._id}`, formData, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `${token}`,
-        },
-      });
-      onUpdate(); // Update the problem list after successful update
-      onHide(); // Hide the modal
+      await customFetch(`/api/problems/${problem._id}`, "PUT", formData);
+      onUpdate();
+      onHide();
     } catch (error) {
       console.error('Error updating problem:', error);
-      setErrors(error.response.data);
+      setErrors(error);
     }
   };
 
+  const renderTestcases = (type) => {
+    return formData[type].map((testcase, index) => (
+      <div key={index} className="mb-4 p-3 border rounded">
+        <Form.Group controlId={`form${type.charAt(0).toUpperCase() + type.slice(1)}Input-${index}`} className="mb-3">
+          <Form.Label>Input</Form.Label>
+          <Form.Control
+            as="textarea"
+            name="input"
+            value={testcase.input}
+            onChange={(e) => handleChange(e, index, type)}
+            rows={2}
+            disabled={!testcase.isEditing}
+            required
+          />
+        </Form.Group>
+        <Form.Group controlId={`form${type.charAt(0).toUpperCase() + type.slice(1)}Output-${index}`} className="mb-3">
+          <Form.Label>Expected Output</Form.Label>
+          <Form.Control
+            as="textarea"
+            name="expected_output"
+            value={testcase.expected_output}
+            onChange={(e) => handleChange(e, index, type)}
+            rows={2}
+            disabled={!testcase.isEditing}
+            required
+          />
+        </Form.Group>
+        <Button 
+          variant={testcase.isEditing ? "primary" : "secondary"} 
+          onClick={() => toggleEdit(index, type)} 
+          className="me-2"
+        >
+          {testcase.isEditing ? "Save" : "Edit"}
+        </Button>
+        <Button variant="danger" onClick={() => removeTestcase(index, type)}>Remove</Button>
+      </div>
+    ));
+  };
+
+
   return (
-    <Modal show={true} onHide={onHide}>
-      {errors.message && <p className="text-danger text-center">{errors.message}</p>}
+    <Modal show={true} onHide={onHide} className="modal-xl">
+            {errors.message && <div className="alert alert-danger">{errors.message}</div>}
       <Modal.Header closeButton>
         <Modal.Title>Update Problem</Modal.Title>
       </Modal.Header>
@@ -114,46 +170,23 @@ const UpdateProblem = ({ problem, onHide, onUpdate }) => {
             <Form.Label>Constraints</Form.Label>
             <Form.Control as="textarea" name="constraints" value={formData.constraints} onChange={handleChange} rows={2} />
           </Form.Group>
-  
           <h3 className="text-center my-4">Test Cases</h3>
-          {formData.testcases.map((testcase, index) => (
-            <div key={index} className="mb-4">
-              <Form.Group controlId={`formTestcaseInput-${index}`} className="mb-3">
-                <Form.Label>Input</Form.Label>
-                <Form.Control as="textarea" name={`testcases-input-${index}`} value={testcase.input} onChange={handleChange} rows={2} required/>
-              </Form.Group>
-              <Form.Group controlId={`formTestcaseOutput-${index}`} className="mb-3">
-                <Form.Label>Expected Output</Form.Label>
-                <Form.Control as="textarea" name={`testcases-expected_output-${index}`} value={testcase.expected_output} onChange={handleChange} rows={2} required/>
-              </Form.Group>
-              <Button variant="danger" onClick={() => removeTestcase(index, 'testcases')}>Remove Test Case</Button>
-            </div>
-          ))}
+          {renderTestcases('testcases')}
           <Button variant="success" onClick={() => addTestcase('testcases')} className="mb-3">
             Add Test Case
           </Button>
          
           <h3 className="text-center my-4">Sample Test Cases</h3>
-          {formData.sample_testcases.map((testcase, index) => (
-            <div key={index} className="mb-4">
-              <Form.Group controlId={`formSampleTestcaseInput-${index}`} className="mb-3">
-                <Form.Label>Input</Form.Label>
-                <Form.Control as="textarea" name={`sample_testcases-input-${index}`} value={testcase.input} onChange={handleChange} rows={2} required/>
-              </Form.Group>
-              <Form.Group controlId={`formSampleTestcaseOutput-${index}`} className="mb-3">
-                <Form.Label>Expected Output</Form.Label>
-                <Form.Control as="textarea" name={`sample_testcases-expected_output-${index}`} value={testcase.expected_output} onChange={handleChange} rows={2} required/>
-              </Form.Group>
-              <Button variant="danger" onClick={() => removeTestcase(index, 'sample_testcases')}>Remove Sample Test Case</Button>
-            </div>
-          ))}
-
+          {renderTestcases('sample_testcases')}
           <Button variant="success" onClick={() => addTestcase('sample_testcases')} className="mb-3">
             Add Sample Test Case
           </Button>
-          <Button variant="primary" type="submit">
-            Update
-          </Button>
+          
+          <div className='d-grid'>
+            <Button variant="primary" type="submit">
+              Update Problem
+            </Button>
+          </div>
         </Form>
       </Modal.Body>
     </Modal>

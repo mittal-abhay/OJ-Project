@@ -1,29 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../commons/navbar';
 const Leaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
-    const {token}  = useAuth();
-    const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
-
+    const {customFetch}  = useAuth();
 
     useEffect(() => {
         const getLeaderBoard = async () => {
             try {
-              const res = await axios.get(`${BASE_URL}/api/users/leaderboard`, {
-                headers: {
-                  Authorization: `${token}`,
-                },
-              });
-              console.log('Leaderboard:', res.data);
-              setLeaderboard(res.data);
+              const res = await customFetch(`/api/users/leaderboard`,"GET");
+              setLeaderboard(res);
             } catch (error) {
               console.error('Error fetching leaderboard:', error);
             }
           };
             getLeaderBoard();
-            }
+          }
     , [])
 
   return (
@@ -41,7 +33,7 @@ const Leaderboard = () => {
         </tr>
       </thead>
       <tbody>
-      {leaderboard.map((user, index) => (
+      {leaderboard?.map((user, index) => (
         <tr>
           <td>
             <div class="d-flex px-2 py-1">
@@ -59,7 +51,7 @@ const Leaderboard = () => {
             </div>
           </td>
           <td>
-            <p class="text-xs font-weight-bold mb-0">{user.problemsSolved}</p>
+            <p class="text-xs font-weight-bold mb-0">{user.problemsSolvedCount}</p>
           </td>
         </tr>
       ))}

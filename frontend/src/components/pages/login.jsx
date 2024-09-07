@@ -38,7 +38,7 @@ const Login = () => {
     }
     try {
       await login(email, password);
-      navigate('/home');
+      navigate('/');
       toast.success("User Logged In successfully");
       setLoading(false);
     } catch (err) {

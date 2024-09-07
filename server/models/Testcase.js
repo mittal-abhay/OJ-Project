@@ -16,6 +16,10 @@ const TestcaseSchema = new mongoose.Schema({
     visibility: {
         type: Boolean,
         default: true
+    },
+    is_sample: {
+        type: Boolean,
+        default: false
     }
 });
 

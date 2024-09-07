@@ -11,7 +11,7 @@ import "ace-builds/src-noconflict/theme-monokai"; // dark theme
 import { toast } from 'react-toastify';
 
 const UserProfile = () => {
-  const { user,token } = useAuth();
+  const { user, customFetch } = useAuth();
   const [userSubmissions, setUserSubmissions] = useState([]);
   const [problemTitles, setProblemTitles] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,14 +22,9 @@ const UserProfile = () => {
   useEffect (() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/users/${user}`, {
-          headers: {
-            Authorization: `${token}`
-          }
-        });
-        setUserProfile(res.data);
+        const res = await customFetch(`/api/users/${user._id}`, "GET");
+        setUserProfile(res);
       } catch (err) {
-        console.log(err);
       }
     }
   fetchUser();
@@ -37,23 +32,15 @@ const UserProfile = () => {
 
   const seeSubmissions = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/users/${user}/submissions`, {
-        headers: {
-          Authorization: `${token}`
-        }
-      });
-      if(res.data.length === 0){
+      const res = await customFetch(`/api/users/${user._id}/submissions`, "GET");
+      if(res.length === 0){
         toast.error("No submissions found");
       }
-      setUserSubmissions(res.data);
+      setUserSubmissions(res);
       
-      const titles = await Promise.all(res.data.map(async (submission) => {
-        const titleRes = await axios.get(`${BASE_URL}/api/problems/${submission.problem_id}`, {
-          headers: {
-            Authorization: `${token}`
-          }
-        });
-        return { id: submission.problem_id, title: titleRes.data.title };
+      const titles = await Promise.all(res.map(async (submission) => {
+        const titleRes = await customFetch(`/api/problems/${submission.problem_id}`, "GET");
+        return { id: submission.problem_id, title: titleRes.title };
       }));
 
       const titlesMap = {};
@@ -63,21 +50,15 @@ const UserProfile = () => {
       setProblemTitles(titlesMap);
 
     } catch (err) {
-      console.log(err);
     }
   };
 
   const handleGetCode = async (id, comment) => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/submissions/code/${id}`, {
-        headers: {
-          Authorization: `${token}`
-        }
-      });
-      setModalContent({ comment, code: res.data.code });
+      const res = await customFetch(`/api/submissions/code/${id}`, "GET");
+      setModalContent({ comment, code: res.code });
       setModalVisible(true);
     } catch (err) {
-      console.log(err);
       toast.error("Failed to get code");
     }
   };
@@ -95,9 +76,9 @@ const UserProfile = () => {
         </div>
         <div className={styles.userInfoBox}>
           <p className={styles.userInfoHeading}>User Profile</p>
-          <p className={styles.userInfoName}>Name: {`${userProfile.firstname} ${userProfile.lastname}`}</p>
-          <p className={styles.userInfoName}>Email: {userProfile.email}</p>
-          <p className={styles.userInfoName}>Problems Solved: {userProfile.problemsSolved}</p>
+          <p className={styles.userInfoName}>Name: {`${userProfile?.firstname} ${userProfile?.lastname}`}</p>
+          <p className={styles.userInfoName}>Email: {userProfile?.email}</p>
+          <p className={styles.userInfoName}>Problems Solved: {userProfile.problemsSolvedCount}</p>
         </div>
       </div>
         <button className={styles.seesubmissions_btn} onClick={seeSubmissions}>See Submissions</button>
@@ -114,7 +95,7 @@ const UserProfile = () => {
             </tr>
           </thead>
           <tbody>
-            {userSubmissions.map((submission, index) => (
+            {userSubmissions?.map((submission, index) => (
               <tr key={index} onClick={() => handleGetCode(submission._id, submission.comment)}>
                 <td>{index + 1}</td>
                 <td>{problemTitles[submission.problem_id] || 'Loading...'}</td>

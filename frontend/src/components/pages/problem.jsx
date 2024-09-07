@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Navbar from '../commons/navbar.jsx';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import AceEditor from 'react-ace';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-
 // Import Ace Editor modes and themes
 import 'ace-builds/src-noconflict/mode-c_cpp';
 import 'ace-builds/src-noconflict/theme-monokai';  // Dark theme
-
+import Loader from '../commons/Loader/Loader.jsx';
 // Import custom styles
-import './problem.css';
+import '../styles/problem.css';
 
 const Problem = () => {
-  const { token } = useAuth();
+  const COMPILER_URL = import.meta.env.VITE_APP_COMPILER_URL;
+  const { customFetch, token} = useAuth();
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [problem, setProblem] = useState(null);
   const [userCode, setUserCode] = useState('');
   const [verdict, setVerdict] = useState(''); // State for verdict
@@ -30,16 +29,12 @@ const Problem = () => {
   const [codeError, setCodeError] = useState(''); // State for code error
   const [language, setLanguage] = useState('cpp'); // State for language
   const [loading, setLoading] = useState(false);
-  const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+
   useEffect(() => {
     const fetchProblem = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/problems/${id}`, {
-          headers: {
-            Authorization: `${token}`,
-          },
-        });
-        setProblem(res.data);
+        const res = await customFetch(`/api/problems/${id}`, "GET");
+        setProblem(res);
       } catch (error) {
         console.error('Error fetching problem details:', error);
       }
@@ -47,25 +42,17 @@ const Problem = () => {
 
     const fetchTestCases = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/problems/${id}/testcase`, {
-          headers: {
-            Authorization: `${token}`,
-          },
-        });
-        setTestCases(res.data);
+        const res = await customFetch(`/api/problems/${id}/testcase`, "GET");
+        setTestCases(res);
       } catch (error) {
         console.error('Error fetching test cases:', error);
       }
     };
-
+    
     const fetchSampleTestCases = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/problems/${id}/sampletestcase`, {
-          headers: {
-            Authorization: `${token}`,
-          },
-        });
-        setSampleTestCases(res.data);
+        const res = await customFetch(`/api/problems/${id}/sampletestcase`, "GET");
+        setSampleTestCases(res);
       } catch (error) {
         console.error('Error fetching sample test cases:', error);
       }
@@ -76,7 +63,7 @@ const Problem = () => {
       fetchTestCases();
       fetchSampleTestCases();
     }
-  }, [id, token]);
+  }, [id]);
 
   const handleUserCodeChange = (newValue) => {
     setUserCode(newValue);
@@ -92,27 +79,37 @@ const Problem = () => {
     setCodeError("");
     setTestCaseStatus([]);
     setResult('');
+  
     try {
       const stestCaseInput = sampleTestCases.map((samplecase) => samplecase.input);
       setSampleTestCaseInput(stestCaseInput);
-      const res = await axios.post(`${BASE_URL}/run`, {
-        code: userCode,
-        inputValue: stestCaseInput,// Send custom input
-        lang: language,
+  
+      const res = await fetch(`${COMPILER_URL}/run`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `${token}`,
-        }
+        },
+        body: JSON.stringify({
+          code: userCode,
+          inputValue: stestCaseInput, // Send custom input
+          lang: language,
+        }),
       });
-      setLoading(false);
-      setResult(res.data.output);
+      if(res.status === 401){
+        logout();
+      }
+      if (!res.ok) {
+        throw await res.json();
+      }
+      const data = await res.json();
+      setResult(data.output);
       setCodeError('');
-      setTestCaseStatus([]);
-      setVerdict("");
-    } catch (error) {
+    } catch (err) {
+      setResult(JSON.stringify(err.error));
+      setCodeError(err.message);
+    } finally {
       setLoading(false);
-      setCodeError(JSON.stringify(error.response.data.error));
-      setResult(error.response.data.message);
       setTestCaseStatus([]);
       setVerdict("");
     }
@@ -124,26 +121,36 @@ const Problem = () => {
     setCodeError("");
     setTestCaseStatus([]);
     setResult('');
+  
     try {
 
-      const res = await axios.post( `${BASE_URL}/run`, {
-        code: userCode,
-        inputValue: [customInput], // Send custom input
-        lang: language,
+      const res = await fetch(`${COMPILER_URL}/run`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `${token}`,
-        }
+        },
+        body: JSON.stringify({
+          code: userCode,
+          inputValue: [customInput], // Send custom input
+          lang: language,
+        }),
       });
-      setLoading(false);
-      setResult(res.data.output);
+      if(res.status === 401){
+        logout();
+      }
+
+      if (!res.ok) {
+        throw await res.json();
+      }
+      const data = await res.json();
+      setResult(data.output);
       setCodeError('');
-      setTestCaseStatus([]);
-      setVerdict("");
-    } catch (error) {
+    } catch (err) {
+      setResult(JSON.stringify(err.error));
+      setCodeError(err.message);
+    } finally {
       setLoading(false);
-      setCodeError(JSON.stringify(error.response.data.error));
-      setResult(error.response.data.message);
       setTestCaseStatus([]);
       setVerdict("");
     }
@@ -155,77 +162,86 @@ const Problem = () => {
     setCodeError("");
     setTestCaseStatus([]);
     setResult('');
+  
     try {
-
-      const res = await axios.post(`${BASE_URL}/submit`, {
-        user_id: user,
-        prob_id: id,
-        code: userCode,
-        lang: language,
+      const res = await fetch(`${COMPILER_URL}/submit`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `${token}`,
-        }
+        },
+        body: JSON.stringify({
+          user_id: user,
+          prob_id: id,
+          code: userCode,
+          lang: language,
+        }),
       });
-      setLoading(false);
-      setResult(JSON.stringify(res.data.submission.comment, null, 2));
-      // Set all test cases to 'passed'
-      setTestCaseStatus(testCases.map(() => 'passed'));
-      setVerdict("Accepted")
+      if(res.status === 401){
+        logout();
+      }
+      if (!res.ok) {
+        throw res;
+      }
+      const data = await res.json();
+      setResult(JSON.stringify(data.submission.comment, null, 2));
+      setTestCaseStatus(testCases.map(() => 'passed')); // Set all test cases to 'passed'
+      setVerdict("Accepted");
       setCodeError('');
     } catch (error) {
-      setLoading(false);
-      setResult(error.response.data.message);
-      console.log(error.response.data.submission)
-      if (result === "Code is Missing") {
+      const errorData = await error.json();
+      setResult(errorData.message);
+  
+      if (errorData.message === "Code is Missing") {
         setVerdict("");
         setCodeError("");
         setTestCaseStatus([]);
         return;
       }
-      const comment = error.response.data.submission.comment;
+  
+      const comment = errorData.submission.comment;
       setResult(comment);
-
+  
       if (comment.includes('Compilation Error')) {
-        setVerdict("Compilation Error")
+        setVerdict("Compilation Error");
         setTestCaseStatus([]); // Reset test case status to an empty array
-        setCodeError(JSON.stringify(error.response.data.error));
+        setCodeError(JSON.stringify(errorData.error));
         return;
       }
-      const tlecase = error.response.data.message;
-
-      if (tlecase.includes('TLE')) {
-        setVerdict("Time Limit Exceeded")
+  
+      if (errorData.message.includes('TLE')) {
+        setVerdict("Time Limit Exceeded");
         setTestCaseStatus([]); // Reset test case status to an empty array
-        setCodeError(JSON.stringify(error.response.data.error));
+        setCodeError(JSON.stringify(errorData.error));
         return;
       }
+  
       if (!comment.includes('failed at testcase')) {
         setTestCaseStatus(testCases.map(() => 'failed'));
-        setVerdict("Wrong Answer")
-        setCodeError(JSON.stringify(error.response.data.error));
+        setVerdict("Wrong Answer");
+        setCodeError(JSON.stringify(errorData.error));
         return;
       }
-
+  
       const failedTestCase = parseInt(comment.match(/\d+/)[0], 10) - 1;
-
+  
       setTestCaseStatus(testCases.map((_, index) => {
         if (index < failedTestCase) return 'passed';
         if (index === failedTestCase) return 'failed';
-        setVerdict("Wrong Answer")
-        setCodeError('');
-        return '';
+        return ''; // Return empty string if not matched
       }));
-
-
+      
+      setVerdict("Wrong Answer");
+      setCodeError('');
+    } finally {
+      console.log(testCaseStatus)
+      setLoading(false);
     }
   };
-
+  
   const handleLanguageChange = (event) => {
     setLanguage(event.target.value);
   };
-
-
 
 
   if (!problem) {
@@ -317,12 +333,12 @@ const Problem = () => {
                   <Card.Header as="h4" style={{ fontWeight: 'bold' }}>Output</Card.Header>
                   <Card.Body>
                     <Card.Text>
-                      {loading && <pre>Loading....</pre>}
+                      {loading && <Loader/>}
                       {verdict && <pre style={{ fontWeight: 'bold' }}> Verdict: {verdict}</pre>}
-                      <pre style={{ fontFamily: 'monospace' }}>{result}</pre>
                       {codeError && <pre style={{ color: 'red' }}> Error: {codeError}</pre>}
+                      <pre style={{ fontFamily: 'monospace' }}>{result}</pre>
                     </Card.Text>
-                    <div className="test-case-indicators">
+                    <d className="test-case-indicators">
                       {testCaseStatus.map((status, index) => (
                         status && (
                           <div
@@ -334,7 +350,7 @@ const Problem = () => {
                           </div>
                         )
                       ))}
-                    </div>
+                    </d>
                   </Card.Body>
                 </Card>
 

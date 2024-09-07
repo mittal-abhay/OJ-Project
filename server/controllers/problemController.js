@@ -5,12 +5,31 @@ import Testcase from '../models/Testcase.js';
 // Create a new problem
 export const createProblem = async (req, res) => {
     try {
-        const { title, statement, tags, difficulty_level, score, testcases, sample_testcases, constraints, input_format, output_format, execution_time_limit
+        const { title, statement, tags, difficulty_level, score, testcases, sample_testcases, constraints, input_format, output_format
          } = req.body;
-        console.log(req.body)
-        if (!title || !statement || !tags || !difficulty_level || !score || !testcases || !constraints || !input_format || !output_format) {
+        if (!title || !statement || !tags || !difficulty_level || !score || !testcases || !sample_testcases || !constraints || !input_format || !output_format) {
             return res.status(400).json({ message: "Please fill all fields" });
         }
+
+
+        if(testcases.length === 0){
+            return res.status(400).json({message: "Please add testcases"});
+        }else if(sample_testcases.length === 0){
+            return res.status(400).json({message: "Please add sample testcases"});
+        }
+
+        for(const testcase of testcases){
+            if(testcase.input === '' || testcase.expected_output === ''){
+                return res.status(400).json({message: "Please fill all fields of testcases"});
+            }
+        }
+
+        for(const sample_testcase of sample_testcases){
+            if(sample_testcase.input === '' || sample_testcase.expected_output === ''){
+                return res.status(400).json({message: "Please fill all fields of sample testcases"});
+            }
+        }
+
 
         const problem = new Problem({
             title,
@@ -26,6 +45,7 @@ export const createProblem = async (req, res) => {
         });
 
         const savedProblem = await problem.save();
+
 
         for (const testcase of testcases) {
             const newTestcase = new Testcase({
@@ -89,26 +109,31 @@ export const updateProblem = async (req, res) => {
         if(output_format) problem.output_format = output_format;
         if(constraints) problem.constraints = constraints;
 
+
+
         if(sample_testcases) {
-            //delete previous sample testcases
+            await Testcase.deleteMany({problem_id: problem._id, is_sample: true});
             for (const sample_testcase of sample_testcases) {
                 const newSampleTestcase = new Testcase({
                     input: sample_testcase.input,
                     expected_output: sample_testcase.expected_output,
-                    problem_id: problem._id
+                    problem_id: problem._id,
+                    is_sample: true
                 });
                 const savedSampleTestcase = await newSampleTestcase.save();
-                console.log("Hi2")
                 problem.sample_testcases.push(savedSampleTestcase._id);
             }
         }
         
         if(testcases) {
+            //delete previous testcases
+            await Testcase.deleteMany({problem_id: problem._id, is_sample: false});
             for (const testcase of testcases) {
                 const newTestcase = new Testcase({
                     input: testcase.input,
                     expected_output: testcase.expected_output,
-                    problem_id: problem._id
+                    problem_id: problem._id,
+                    is_sample: false
                 });
                 const savedTestcase = await newTestcase.save();
                 problem.testcases.push(savedTestcase._id);
@@ -143,8 +168,7 @@ export const getSampleTestCases = async (req, res) => {
         if(!problem){
             return res.status(404).json({message: "Problem not found"});
         }
-        const sample_testcases = problem.sample_testcases;
-        const sample_testcases_data = await Testcase.find({_id: {$in: sample_testcases}});
+        const sample_testcases_data = await Testcase.find({problem_id: problem._id, is_sample: true});
         return res.status(200).json(sample_testcases_data);
     }catch(err){
         return res.status(500).json({message: err.message});
@@ -167,7 +191,6 @@ export const getTestCases = async (req, res) => {
 //add test cases to a problem
 export const addTestcase = async (req, res) => {
     try{
-        console.log(req.params.id)
         const problem = await Problem.findById(req.params.id);
     
         if(!problem){

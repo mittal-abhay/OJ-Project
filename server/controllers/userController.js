@@ -1,5 +1,4 @@
 import User from '../models/User.js';
-import Problem from '../models/Problem.js';
 import Submission from '../models/Submission.js';
 
 export const getUserById = async(req, res) => {
@@ -48,9 +47,10 @@ export const getUserSubmissions = async(req, res) => {
     }
 }
 
+
 export const getUsersByProblems = async (req, res) => {
     try {
-        const users = await User.find().sort({ problemsSolved: -1 });
+        const users = await User.find().sort({ problemsSolvedCount: -1 });
         return res.status(200).json(users);
     } catch (err) {
         return res.status(500).json({ message: err.message });
